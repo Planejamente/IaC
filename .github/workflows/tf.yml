@@ -21,3 +21,11 @@ jobs:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: sa-east-1
+
+    - uses: opentofu/setup-opentofu@v1
+    - run: tofu init
+    - id: plan  
+      run: tofu plan ./tf/main.tf -no-color
+    - run: echo ${{ steps.plan.outputs.stdout }}
+    - run: echo ${{ steps.plan.outputs.stderr }}
+    - run: echo ${{ steps.plan.outputs.exitcode }}
