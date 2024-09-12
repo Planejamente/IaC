@@ -42,12 +42,12 @@ jobs:
       working-directory: ./tf
       run: tofu apply -auto-approve
 
-    # Save the Terraform state file as an artifact to persist it across workflow runs
     - name: Upload Terraform state
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: terraform-state
         path: ./tf/terraform.tfstate
+        compression-level: 0  # No compression for faster upload
 
     - name: Echo output of plan
       run: echo ${{ steps.plan.outputs.stdout }}
