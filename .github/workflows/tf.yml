@@ -15,19 +15,45 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+
     - name: "Configure AWS Credentials Action for GitHub Actions"
       uses: aws-actions/configure-aws-credentials@v4.0.2
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: sa-east-1
-      
+
+    # Restore cached Terraform state if available
+    - name: Restore Terraform state
+      id: cache-state
+      uses: actions/cache@v3
+      with:
+        path: ./tf/terraform.tfstate
+        key: terraform-state-${{ github.ref }}
+        restore-keys: terraform-state-
+
     - uses: opentofu/setup-opentofu@v1
-    - run: tofu init
+
+    - name: Tofu Init
       working-directory: ./tf
+      run: tofu init
+
     - id: plan  
       working-directory: ./tf
-      run: tofu destroy -auto-approve
-    - run: echo ${{ steps.plan.outputs.stdout }}
-    - run: echo ${{ steps.plan.outputs.stderr }}
-    - run: echo ${{ steps.plan.outputs.exitcode }}
+      run: tofu apply -auto-approve
+
+    # Save the Terraform state file as an artifact to persist it across workflow runs
+    - name: Upload Terraform state
+      uses: actions/upload-artifact@v3
+      with:
+        name: terraform-state
+        path: ./tf/terraform.tfstate
+
+    - name: Echo output of plan
+      run: echo ${{ steps.plan.outputs.stdout }}
+
+    - name: Echo output of stderr
+      run: echo ${{ steps.plan.outputs.stderr }}
+
+    - name: Echo exit code
+      run: echo ${{ steps.plan.outputs.exitcode }}
