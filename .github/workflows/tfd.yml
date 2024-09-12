@@ -1,0 +1,36 @@
+name: Tofu destroy
+
+on:
+  workflow_dispatch:
+
+jobs:
+
+  destroy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: "Configure AWS Credentials Action for GitHub Actions"
+      uses: aws-actions/configure-aws-credentials@v4.0.2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: sa-east-1
+
+    # Download the Terraform state artifact from the previous job
+    - name: Download Terraform state
+      uses: actions/download-artifact@v3
+      with:
+        name: terraform-state
+        path: ./tf
+
+    - uses: opentofu/setup-opentofu@v1
+
+    - name: Tofu Init
+      working-directory: ./tf
+      run: tofu init
+
+    - name: Tofu Destroy
+      working-directory: ./tf
+      run: tofu destroy -auto-approve
